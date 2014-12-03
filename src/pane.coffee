@@ -334,6 +334,7 @@ class Pane extends Model
     @items.splice(index, 0, item)
     @emit 'item-added', item, index
     @emitter.emit 'did-add-item', {item, index}
+    @container?.didAddPaneItem(item, this, index)
     @setActiveItem(item) unless @getActiveItem()?
     item
 
@@ -368,6 +369,7 @@ class Pane extends Model
     @items.splice(index, 1)
     @emit 'item-removed', item, index, destroyed
     @emitter.emit 'did-remove-item', {item, index, destroyed}
+    @container?.didRemovePaneItem(item)
     @container?.didDestroyPaneItem({item, index, pane: this}) if destroyed
     @destroy() if @items.length is 0 and atom.config.get('core.destroyEmptyPanes')
 

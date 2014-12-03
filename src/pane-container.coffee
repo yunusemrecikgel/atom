@@ -34,7 +34,7 @@ class PaneContainer extends Model
     @emitter = new Emitter
     @subscriptions = new CompositeDisposable
 
-    @itemRegistry = new ItemRegistry
+    @itemRegistry ?= new ItemRegistry
     @registerViewProviders()
 
     @setRoot(params?.root ? new Pane)
@@ -43,10 +43,9 @@ class PaneContainer extends Model
     @destroyEmptyPanes() if params?.destroyEmptyPanes
 
     @monitorActivePaneItem()
-    @monitorPaneItems()
 
   deserializeParams: (params) ->
-    params.root = atom.deserializers.deserialize(params.root, container: this)
+    params.root = atom.deserializers.deserialize(params.root)
     params.destroyEmptyPanes = atom.config.get('core.destroyEmptyPanes')
     params.activePane = params.root.getPanes().find (pane) -> pane.id is params.activePaneId
     params
@@ -195,6 +194,9 @@ class PaneContainer extends Model
 
   didAddPane: (event) ->
     @emitter.emit 'did-add-pane', event
+    {pane} = event
+    for item, index in pane.getItems()
+      @didAddPaneItem(item, pane, index)
 
   didDestroyPane: (event) ->
     @emitter.emit 'did-destroy-pane', event
@@ -217,20 +219,9 @@ class PaneContainer extends Model
 
       @subscriptions.add(childSubscription)
 
-  monitorPaneItems: ->
-    @subscriptions.add @observePanes (pane) =>
-      for item, index in pane.getItems()
-        @addedPaneItem(item, pane, index)
-
-      pane.onDidAddItem ({item, index}) =>
-        @addedPaneItem(item, pane, index)
-
-      pane.onDidRemoveItem ({item}) =>
-        @removedPaneItem(item)
-
-  addedPaneItem: (item, pane, index) ->
+  didAddPaneItem: (item, pane, index) ->
     @itemRegistry.addItem(item)
     @emitter.emit 'did-add-pane-item', {item, pane, index}
 
-  removedPaneItem: (item) ->
+  didRemovePaneItem: (item) ->
     @itemRegistry.removeItem(item)

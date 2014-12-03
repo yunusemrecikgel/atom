@@ -176,6 +176,40 @@ describe "PaneContainer", ->
 
       expect(events).toEqual [{pane: pane2}, {pane: pane3}]
 
+  describe "::onDidAddPaneItem(callback)", ->
+    [container, pane, events] = []
+
+    beforeEach ->
+      container = new PaneContainer
+      pane = container.getActivePane()
+
+      events = []
+      container.onDidAddPaneItem (event) ->
+        events.push(['did-add-pane-item', event])
+      pane.onDidAddItem (event) ->
+        events.push(['did-add-item', event])
+
+    describe "when an item is added to a pane", ->
+      it "invokes its callback after callbacks registered via Pane::onDidAddItem", ->
+        item = new Object
+        pane.addItem(item)
+
+        expect(events).toEqual([
+          ['did-add-item', {item, index: 0}]
+          ['did-add-pane-item', {item, pane, index: 0}]
+        ])
+
+    describe "when a pane is added", ->
+      it "invokes its callback", ->
+        item1 = new Object
+        item2 = new Object
+
+        newPane = pane.splitRight(items: [item1, item2])
+        expect(events).toEqual([
+          ['did-add-pane-item', {item: item1, pane: newPane, index: 0}]
+          ['did-add-pane-item', {item: item2, pane: newPane, index: 1}]
+        ])
+
   describe "::onWillDestroyPaneItem() and ::onDidDestroyPaneItem", ->
     it "invokes the given callbacks when an item will be destroyed on any pane", ->
       container = new PaneContainer
