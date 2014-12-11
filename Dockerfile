@@ -20,3 +20,4 @@ RUN yum install -y nodejs
 
 ADD . /atom
 WORKDIR /atom
+TEST
